@@ -1,0 +1,25 @@
+def remote = [:]
+remote.name = "suranga"
+remote.host = "192.168.143.12"
+remote.allowAnyHosts = true
+
+node {
+    withCredentials([sshUserPrivateKey(credentialsId: 'node-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'suranga')]){
+        remote.user = suranga
+        remote.identityFile = identity
+        stage("check"){
+         	sshCommand remote: remote, command: "docker images"
+            sshCommand remote: remote, command: "docker run hello-world"
+            sshCommand remote: remote, command: "docker ps -a"
+        }
+        stage("deploy"){
+            sshCommand remote: remote, command: "docker commit 4bf6d78ca3e5 surangajayalath/hello-test:v1"
+            sshCommand remote: remote, command: "docker images"
+            sshCommand remote: remote, command: "docker tag 6bf688c4ef34 surangajayalath/hello-test:v1"
+            sshCommand remote: remote, command: "docker push surangajayalath/hello-test:v1" 
+        }
+        stage("pushing"){
+            sshCommand remote: remote, command: "docker push surangajayalath/hello-test:v1"
+        }
+    }
+}
